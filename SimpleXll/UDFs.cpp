@@ -74,8 +74,11 @@ void fill_range(LPXLOPER12  m, int  column, const std::vector<T> & in)
 		{
 			size_t index = i*m->val.array.columns + column;
 			m->val.array.lparray[index].val.num = static_cast<double>(in[i]);
+			m->val.array.lparray[index].xltype = xltypeNum;
 		}
 }
+
+HANDLE hArray;
 
 template<typename... T>
 struct toExcel
@@ -83,16 +86,22 @@ struct toExcel
 	void  fill(LPXLOPER12  excelArray, const std::vector<T>&... args)
 	{
 	
-		auto x = std::get<0>(std::make_tuple<const std::vector<T>...>(args...));
-#if 0
-		int rwcol = sizeof...(args)* std::get<0>(args...).size();
+		auto tuple = std::tuple<const std::vector<T>&...>(args...);
+		auto rows = std::get<0>(tuple).size();
+		auto cols = sizeof...(args);
+		int rwcol = cols * rows;
+	
+		LPXLOPER12 pxArray = new XLOPER12[rwcol];
 
-		excelArray = (LPXLOPER12)GlobalLock(hArray = GlobalAlloc(GMEM_ZEROINIT, rwcol * sizeof(XLOPER12)));
+		excelArray->val.array.columns = cols;
+		excelArray->val.array.rows = rows;
+		excelArray->xltype = xltypeMulti | xlbitDLLFree;
+		
 
-		excelArray->xltype |= xlbitDLLFree;
+		excelArray->val.array.lparray = pxArray;
+
 		int n = 0;
 		int dummy[sizeof...(args)] = { (fill_range(excelArray, n++, args), 0)... };
-#endif
 	}
 
 };
@@ -112,23 +121,14 @@ __declspec(dllexport) long Multiplicate(long arg1, long arg2)
 
 
 
-
 // Example UDF that adds two numbers passed as longs, and
 // returns a long.
 __declspec(dllexport) LPXLOPER12  WINAPI  MultiplicateArray(LPXLOPER12 excelArray)
 {
-#if 0
-	long a = 0, b = 0;
 
-	compute(a, b);
-
-	return nullptr;
-#endif
-
-#if 1
 	try
 	{
-		LPXLOPER12 ret = nullptr;
+		static XLOPER12 ret;
 
 		std::vector<long> value;
 		std::vector<long> acum;
@@ -153,9 +153,9 @@ __declspec(dllexport) LPXLOPER12  WINAPI  MultiplicateArray(LPXLOPER12 excelArra
 
 			myPool.end();
 			toExcel<long> myTo;
-			myTo.fill(ret, res);
+			myTo.fill(&ret, res);
 
-			return ret;
+			return (LPXLOPER12)&ret;
 		}
 		else
 			return 0;
@@ -164,5 +164,13 @@ __declspec(dllexport) LPXLOPER12  WINAPI  MultiplicateArray(LPXLOPER12 excelArra
 	{
 		return nullptr;
 	}
-#endif
+
+}
+
+__declspec(dllexport) void WINAPI xlAutoFree12(LPXLOPER12 pxFree)
+{
+	if (pxFree->xltype == (xltypeMulti | xlbitDLLFree))
+	{
+		delete[] pxFree->val.array.lparray;
+	}
 }

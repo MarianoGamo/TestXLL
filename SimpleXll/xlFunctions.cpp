@@ -58,20 +58,51 @@ int lpwstricmp(LPWSTR s, LPWSTR t)
        }                                                                     
        return 0;
 }
+
+
+
+//DWORD TlsIndex; // only needs module scope if all TLS access in this module
+
  
 BOOL APIENTRY DllMain( HANDLE hDLL, DWORD dwReason, LPVOID lpReserved )
 {
        switch (dwReason)
        {
-       case DLL_PROCESS_ATTACH:
-       case DLL_PROCESS_DETACH:
-       case DLL_THREAD_ATTACH:
-       case DLL_THREAD_DETACH:
-       default:
-              break;
+			case DLL_PROCESS_ATTACH:
+				//if ((TlsIndex = TlsAlloc()) == TLS_OUT_OF_INDEXES)
+				//	return FALSE;
+				//break;
+			case DLL_PROCESS_DETACH:
+				//TlsFree(TlsIndex); // Release the TLS index.
+				//break;
+			case DLL_THREAD_ATTACH:
+			case DLL_THREAD_DETACH:
+			default:
+				break;
        }
        return TRUE;
 }
+//
+//struct TLS_data
+//{
+//	xloper xloper_shared_ret_val;
+//	// Add other required thread-local data here...
+//};
+//
+//TLS_data *get_TLS_data(void)
+//{
+//	// Get a pointer to this thread's static memory
+//	void *pTLS = TlsGetValue(TlsIndex);
+//	if (!pTLS) // No TLS memory for this thread yet
+//	{
+//		if ((pTLS = calloc(1, sizeof(TLS_data))) == NULL)
+//			// Display some error message (omitted)
+//			return NULL;
+//		TlsSetValue(TlsIndex, pTLS); // Associate this this thread
+//	}
+//	return (TLS_data *)pTLS;
+//}
+
  
 // Excel calls xlAutoOpen when it loads the XLL.
 __declspec(dllexport) int WINAPI xlAutoOpen(void)

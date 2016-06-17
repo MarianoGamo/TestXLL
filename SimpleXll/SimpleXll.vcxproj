@@ -80,7 +80,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>D:\PROJECTS\2010 Office System Developer Resources\Excel2010XLLSDK\LIB;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>xlcall32.lib;frmwrk32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <ModuleDefinitionFile>Source.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>SimpleXll.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
